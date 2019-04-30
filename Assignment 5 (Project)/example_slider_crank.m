@@ -235,22 +235,19 @@ options = odeset('Stats', 'on','RelTol',1e-6);
 tic
 [t, y] = ode45(@eom, tspan, q0, options, param);
 toc
-Solun = y';
+sol = y';
 
 % Animation of Dynamic Analysis
-figure(5)
+figure
 for iii = 1:length(tspan)
     clf
-%     axis equal
-%     grid on
-%     grid minor
     hold on
     
-    r1_J1 = [Solun(4,iii);Solun(5,iii)] + [cos(Solun(6,iii)) -sin(Solun(6,iii)); sin(Solun(6,iii)) cos(Solun(6,iii))]*[body(2).l/2;0];
-    r1_J2 = [Solun(4,iii);Solun(5,iii)] + [cos(Solun(6,iii)) -sin(Solun(6,iii)); sin(Solun(6,iii)) cos(Solun(6,iii))]*[-body(2).l/2;0];
-    r2_J2 = [Solun(7,iii);Solun(8,iii)] + [cos(Solun(9,iii)) -sin(Solun(9,iii)); sin(Solun(9,iii)) cos(Solun(9,iii))]*[body(3).l*3/5;0];
-    r2_J3 = [Solun(7,iii);Solun(8,iii)] + [cos(Solun(9,iii)) -sin(Solun(9,iii)); sin(Solun(9,iii)) cos(Solun(9,iii))]*[-body(3).l*2/5;0];
-    r3_J3 = [Solun(10,iii);Solun(11,iii)] + [cos(Solun(12,iii)) -sin(Solun(12,iii)); sin(Solun(12,iii)) cos(Solun(12,iii))]*[0;0];
+    r1_J1 = [sol(4,iii);sol(5,iii)] + [cos(sol(6,iii)) -sin(sol(6,iii)); sin(sol(6,iii)) cos(sol(6,iii))]*[body(2).l/2;0];
+    r1_J2 = [sol(4,iii);sol(5,iii)] + [cos(sol(6,iii)) -sin(sol(6,iii)); sin(sol(6,iii)) cos(sol(6,iii))]*[-body(2).l/2;0];
+    r2_J2 = [sol(7,iii);sol(8,iii)] + [cos(sol(9,iii)) -sin(sol(9,iii)); sin(sol(9,iii)) cos(sol(9,iii))]*[body(3).l*3/5;0];
+    r2_J3 = [sol(7,iii);sol(8,iii)] + [cos(sol(9,iii)) -sin(sol(9,iii)); sin(sol(9,iii)) cos(sol(9,iii))]*[-body(3).l*2/5;0];
+    r3_J3 = [sol(10,iii);sol(11,iii)] + [cos(sol(12,iii)) -sin(sol(12,iii)); sin(sol(12,iii)) cos(sol(12,iii))]*[0;0];
 
     plot([r1_J1(1), r1_J2(1)], [r1_J1(2), r1_J2(2)], 'LineWidth',2)
     plot([r2_J2(1), r2_J3(1)], [r2_J2(2), r2_J3(2)], 'LineWidth',2)
@@ -259,11 +256,10 @@ for iii = 1:length(tspan)
     
     axis([- 0.75 0.25 -0.5 0.5])
 
-    grid on;
-    grid minor;
     xlabel('Position, ${q_x}$ (m)','FontSize',12, 'FontName', 'Times New Roman','interpreter','latex');
     ylabel('Position, ${q_y}$ (m)','FontSize',12, 'FontName', 'Times New Roman','interpreter','latex');
-    legend({'Crank','Connection rod','Slider','Origin'},'FontSize',12, 'FontName', 'Times New Roman', 'location', 'best')
+    legend({'Crank','Connection rod','Slider','Origin'},'Location','northeast', 'FontSize',12, 'FontName', 'Times New Roman')
+    
     title('Dynamic Analysis of Slider Crank Mechanism','FontSize',12, 'FontName', 'Times New Roman')
     set(gca,'FontSize',12, 'FontName', 'Times New Roman');
     
