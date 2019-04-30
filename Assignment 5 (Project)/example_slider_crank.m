@@ -1,3 +1,7 @@
+clear all;
+close all;
+clc;
+
 % Slider crank kinematic analysis
 %% Coordinates
 % ground
@@ -172,3 +176,98 @@ plot(QPP(:, 4), QPP(:, 5), ...
     0, 0, '*', 'LineWidth', 2);
 axis equal
 
+%% Dynamic Analysis
+%  Define bodies
+body(1).m = 0; % ground mass equals to 0 kg
+body(1).l = 0; 
+body(1).Ic = body(1).m * body(1).l^2 / 12; % mass moment of inertia along center of mass in kgm2
+body(1).q = [0; 0; 0];
+
+body(2).m = 2; % crank mass equals to 2 kg
+body(2).l = 0.2; 
+body(2).Ic = body(2).m * body(2).l^2 / 12; % mass moment of inertia along center of mass in kgm2
+body(2).q = [-0.1 * cosd(30)
+    0.1 * sind(30)
+    -deg2rad(30)];
+
+body(3).m = 2; % link mass equals to 2 kg
+body(3).l = 0.5; 
+body(3).Ic = body(3).m * body(3).l^2 / 12; % mass moment of inertia along center of mass in kgm2
+body(3).q = [-0.2 * cosd(30) - 0.3 * cos(phi_l)
+    h_B - 0.3 * sin(phi_l)
+    phi_l];
+
+body(4).m = 2; % slider mass equals to 2 kg
+body(4).l = 0; 
+body(4).Ic = body(4).m * body(4).l^2 / 12; % mass moment of inertia along center of mass in kgm2
+body(4).q = [-0.2 * cosd(30) - 0.5 * cos(phi_l)
+    0
+    0];
+
+param.grav = [0; -9.81]; % gravitational acceleration
+
+%% Get mass matrix
+
+param.M = mass_matrix(body);
+q0 = [q_0;
+    zeros(length(q_0), 1)];
+tspan = 0:0.05:10;
+
+sforce.f = [1; 0];
+sforce.i = 1;
+sforce.u_i = [0; 1];
+
+param.bodies = body;
+% g_fun= @(t, q, dq) g_baum(revolute, simple, driving, t, q, dq);
+
+param.C_fun = @(t, q) constraint_dynamic(revolute, simple, t, q);
+param.Cq_fun = @(t, q) constraint_dq_dynamic(revolute, simple, t, q);
+param.g_fun= @(t, q, dq) g_dynamic(revolute, simple, t, q, dq);
+
+%% Time to integrate it
+% Note that M is constant, but F, in general, no
+% We can use one of the following:
+%   ode45 from Matlab
+%   Euler-Cromer as introduced some time ago
+%   Lets try Euler-Cromer
+% acc_f = @(t, q, qp) system_accelerations(t, q, qp, M, sforce, grav, body);
+options = odeset('Stats', 'on','RelTol',1e-6);
+tic
+[t, y] = ode45(@eom, tspan, q0, options, param);
+toc
+Solun = y';
+
+% Animation of Dynamic Analysis
+figure(5)
+for iii = 1:length(tspan)
+    clf
+%     axis equal
+%     grid on
+%     grid minor
+    hold on
+    
+    r1_J1 = [Solun(4,iii);Solun(5,iii)] + [cos(Solun(6,iii)) -sin(Solun(6,iii)); sin(Solun(6,iii)) cos(Solun(6,iii))]*[body(2).l/2;0];
+    r1_J2 = [Solun(4,iii);Solun(5,iii)] + [cos(Solun(6,iii)) -sin(Solun(6,iii)); sin(Solun(6,iii)) cos(Solun(6,iii))]*[-body(2).l/2;0];
+    r2_J2 = [Solun(7,iii);Solun(8,iii)] + [cos(Solun(9,iii)) -sin(Solun(9,iii)); sin(Solun(9,iii)) cos(Solun(9,iii))]*[body(3).l*3/5;0];
+    r2_J3 = [Solun(7,iii);Solun(8,iii)] + [cos(Solun(9,iii)) -sin(Solun(9,iii)); sin(Solun(9,iii)) cos(Solun(9,iii))]*[-body(3).l*2/5;0];
+    r3_J3 = [Solun(10,iii);Solun(11,iii)] + [cos(Solun(12,iii)) -sin(Solun(12,iii)); sin(Solun(12,iii)) cos(Solun(12,iii))]*[0;0];
+
+    plot([r1_J1(1), r1_J2(1)], [r1_J1(2), r1_J2(2)], 'LineWidth',2)
+    plot([r2_J2(1), r2_J3(1)], [r2_J2(2), r2_J3(2)], 'LineWidth',2)
+    plot(r3_J3(1), r3_J3(2),'*', 'LineWidth',4)
+    plot(0,0, '*', 'LineWidth', 4)
+    
+    axis([- 0.75 0.25 -0.5 0.5])
+
+    grid on;
+    grid minor;
+    xlabel('Position, ${q_x}$ (m)','FontSize',12, 'FontName', 'Times New Roman','interpreter','latex');
+    ylabel('Position, ${q_y}$ (m)','FontSize',12, 'FontName', 'Times New Roman','interpreter','latex');
+    legend({'Crank','Connection rod','Slider','Origin'},'FontSize',12, 'FontName', 'Times New Roman', 'location', 'best')
+    title('Dynamic Analysis of Slider Crank Mechanism','FontSize',12, 'FontName', 'Times New Roman')
+    set(gca,'FontSize',12, 'FontName', 'Times New Roman');
+    
+    pause(0.05)
+    drawnow
+    
+end
