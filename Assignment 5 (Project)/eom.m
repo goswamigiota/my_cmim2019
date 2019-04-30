@@ -5,14 +5,14 @@ C = param.C_fun(t, q);
 Cq = param.Cq_fun(t, q);
 g = param.g_fun(t, q, q0(13:24));
 
-% g_baum = g - (2*20*Cq*q0(13:24)) - (400*C);
+g_baum = g - (2*20*Cq*q0(13:24)) - (400*C);
 
 F = force_vector(param.grav, param.bodies);
 
 sysF = [F;
-    g]; 
+    g_baum]; 
 sysM = [param.M Cq.';
-    Cq zeros(length(g))];
+    Cq zeros(length(g_baum))];
 
 qdotdot = sysM\sysF;
 
